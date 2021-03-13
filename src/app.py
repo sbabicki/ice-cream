@@ -2,24 +2,20 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-
-
-
-
 #def one_row(df):
    #df.filter('year')
    #return df.loc[0,:]
 
 #Save all names in separate dataframe
 #Filter and save all other variables (i.e. address) as list
-#Also need federal vs. provincial better
+#Also need federal vs. provincial button
 
 @st.cache
 def get_data(address=None, biz_name=None):
     #AWS_BUCKET_URL = "https://streamlit-demo-data.s3-us-west-2.amazonaws.com"
     #df = pd.read_csv(AWS_BUCKET_URL + "/agri.csv.gz")
     #global df
-    df = pd.read_csv('business-licences-hackathon.csv', sep = ';', low_memory=False)#dtype={'BusinessName': str
+    df = pd.read_csv('business-licences-hackathon.csv', sep = ';', low_memory=False)
 
 
     if (address) and (biz_name):
@@ -28,7 +24,8 @@ def get_data(address=None, biz_name=None):
         df = df.query('BusinessName == @biz_name & Street == @address')
         return df.set_index("BusinessName")
     elif address:
-        df = df.query('BusinessName == @address')
+        print(address)
+        df = df.query('Street == @address')
         return df.set_index("Street")
     elif biz_name:
         #df.query()
@@ -44,13 +41,14 @@ def main():
     st.sidebar.text("Enter an address, business name, \n or both!")
     address = st.sidebar.text_input("Enter an address")
     biz_name = st.sidebar.text_input("Enter a business name")
+    print(st.sidebar)
     if st.sidebar.button('Search'):
         df = get_data(address, biz_name)
         st.write(df)
-        option = st.sidebar.selectbox(
-        'How would you like to be contacted?',
-        ('Email', 'Home phone', 'Mobile phone'))
-        st.sidebar.write('You selected:', option)
+        #option = st.sidebar.selectbox(
+        #'These are multiple return values',
+        #('ALL VALUE1', 'ALL VALUE2', 'ALL VALUE3')
+        #st.sidebar.write('You selected:', option)
     #print(df)
 
 
