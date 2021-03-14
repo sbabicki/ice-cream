@@ -10,23 +10,23 @@ def get_data(address=None, biz_name=None):
     df = pd.read_csv('./data/processed/business-licences-hackathon.csv', sep = ';', low_memory=False)
     
     # for testing
-    df = df.iloc[0:1]
-    return df
+    #df = df.iloc[0:1]
+    #return df
     
     if (address) and (biz_name):
         #NEED TO CHANGE STREET TO ADDRESS
         #ONlY DISPLAY LATEST FOLDER YEAR
         df = df.query('BusinessName == @biz_name & Street == @address')
-        return df.set_index("BusinessName")
+        return df#.set_index("BusinessName")
     elif address:
         print(address)
         df = df.query('Street == @address')
-        return df.set_index("Street")
+        return df#.set_index("Street")
     elif biz_name:
         #df.query()
         #print(biz_name)
         df = df.query('BusinessName == @biz_name')
-        return df.set_index("BusinessName")
+        return df.reset_index(drop=True)
     else:
         print('Please enter in an address or business name.')
 
@@ -67,15 +67,15 @@ def main():
                 col1.markdown("<a href='https://google.com/search?q=\""+searchTerm+"\"' target='_blank'>Google partial search</a>",  unsafe_allow_html=True)
                 col1.markdown("<a href='https://facebook.com/search/people/?q="+searchTerm+"' target='_blank'>Facebook search</a>",  unsafe_allow_html=True)
 
-        col2.subheader('Other Results')
+        col2.subheader('Other Matching Results')
         col2.write(df.iloc[1:])
         
         col2.subheader("Offshore Leaks Database Check")
         # offshore_message, offshore_df, canlii_message, canlii_df
-        if(business_address):
+        if business_address:
             pass
             #col2.write(offshore_leaks_search_address(address))
-        if(business_name):
+        if business_name:
             pass
             #col2.write(offshore_leaks_search_entity(biz_name))
             col2.subheader("CanLii Legal Check")
