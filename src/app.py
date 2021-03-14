@@ -1,91 +1,103 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-
-#def one_row(df):
-   #df.filter('year')
-   #return df.loc[0,:]
-
-#Save all names in separate dataframe
-#Filter and save all other variables (i.e. address) as list
-#Also need federal vs. provincial button
+import streamlit.components.v1 as components
+from requests.utils import quote
+#import canlii
 
 @st.cache
 def get_data(address=None, biz_name=None):
-    #AWS_BUCKET_URL = "https://streamlit-demo-data.s3-us-west-2.amazonaws.com"
-    #df = pd.read_csv(AWS_BUCKET_URL + "/agri.csv.gz")
-    #global df
-    df = pd.read_csv('business-licences-hackathon.csv', sep = ';', low_memory=False)
-
-
-    if (address) and (biz_name):
+    
+    df = pd.read_csv('./data/processed/business-licences-hackathon.csv', sep = ';', low_memory=False)
+    #df = orig_df
+    # for testing
+    #df = df.iloc[0:1]
+    #return df
+    
+    if address and biz_name:
         #NEED TO CHANGE STREET TO ADDRESS
         #ONlY DISPLAY LATEST FOLDER YEAR
         df = df.query('BusinessName == @biz_name & Street == @address')
-        return df.set_index("BusinessName")
     elif address:
-        print(address)
         df = df.query('Street == @address')
-        return df.set_index("Street")
     elif biz_name:
-        #df.query()
-        #print(biz_name)
         df = df.query('BusinessName == @biz_name')
-        return df.set_index("BusinessName")
     else:
         print('Please enter in an address or business name.')
-
+    
+    if df.empty:
+        df = df.append(pd.Series(), ignore_index = True)
+        if biz_name:
+            df["BusinessName"] = biz_name
+        if address:
+            df["Street"] = address
+    df.fillna("Unknown", inplace=True)   
+    return df.reset_index(drop=True)
 
 def main():
     #try:
     st.sidebar.text("Enter an address, business name, \n or both!")
-    address = st.sidebar.text_input("Enter an address")
-    biz_name = st.sidebar.text_input("Enter a business name")
-    print(st.sidebar)
+    search_address = st.sidebar.text_input("Enter an address")
+    search_biz_name = st.sidebar.text_input("Enter a business name")
+    
     if st.sidebar.button('Search'):
-        df = get_data(address, biz_name)
-        st.write(df)
-        #option = st.sidebar.selectbox(
-        #'These are multiple return values',
-        #('ALL VALUE1', 'ALL VALUE2', 'ALL VALUE3')
-        #st.sidebar.write('You selected:', option)
-    #print(df)
+        df = get_data(search_address, search_biz_name)
+        
+        company = df.iloc[0, :]
+        business_name = company["BusinessName"] 
+        business_address = company["Street"]
+        phone = "Unknown"
+        num_employees = str(company["NumberofEmployees"]).replace(".0", "")
+        num_years_active = "Unknown"
+        director_names = "Unknown"
+        
+        st.header("Results for "+business_name)
+        col1, col2 = st.beta_columns(2)
+        
+        col1.subheader("Company Information")
+        col1.markdown(f"Name: **{business_name}**")
+        col1.markdown(f"Address: **{business_address}**")
+        col1.markdown(f"Phone: **{phone}**")
+        col1.markdown(f"Number of employees: **{num_employees}**")
+        col1.markdown(f"Estimated years active: **{num_years_active}**")
+        col1.markdown(f"Director names: **{director_names}**")
 
+        col1.subheader('Search Links')
+        for searchTerm in [business_name, business_address]:
+            if(searchTerm):
+                query = quote(searchTerm)
+                col1.markdown(f"<a href='https://google.com/search?q=\"{query}\"' target='_blank'>Google exact match for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
+                col1.markdown(f"<a href='https://google.com/search?q={query}' target='_blank'>Google partial match for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
+                col1.markdown(f"<a href='https://facebook.com/search/people/?q={query}' target='_blank'>Facebook search for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
 
-
-        # countries = st.multiselect(
-        #     "Choose countries", list(df.index), ["China", "United States of America"]
-        #
-        # if not countries:
-        #     st.error("Please select at least one country.")
-        # else:
-        #     data = df.loc[countries]
-        #     data /= 1000000.0
-        #     st.write("### Gross Agricultural Production ($B)", data.sort_index())
-
-        #     data = data.T.reset_index()
-        #     data = pd.melt(data, id_vars=["index"]).rename(
-        #         columns={"index": "year", "value": "Gross Agricultural Product ($B)"}
-        #     )
-        #     chart = (
-        #         alt.Chart(data)
-        #         .mark_area(opacity=0.3)
-        #         .encode(
-        #             x="year:T",
-        #             y=alt.Y("Gross Agricultural Product ($B):Q", stack=None),
-        #             color="Region:N",
-        #         )
-        #     )
-        #     st.altair_chart(chart, use_container_width=True)
-    # except urllib.error.URLError as e:
-    #     st.error(
-    #         """
-    #         **This demo requires internet access.**
-
-    #         Connection error: %s
-    #     """
-    #         % e.reason
-    #     )
+        col2.subheader('Other Matching Results')
+        col2.write(df.iloc[1:])
+        
+        col2.subheader("Offshore Leaks Database Check")
+        # offshore_message, offshore_df, canlii_message, canlii_df
+        if business_address:
+            pass
+            #col2.write(offshore_leaks_search_address(address))
+        if business_name:
+            pass
+            #col2.write(offshore_leaks_search_entity(biz_name))
+            col2.subheader("CanLii Legal Check")
+            #col2.write(canlii_search_entity(biz_name))
+        
+        col2.subheader("Fraud Check")
+        col2.markdown("No fraud detected")
+        
+        if business_address:
+            st.subheader(f"Google maps search by address ({business_address})")
+            address_map = "https://www.google.com/maps/embed/v1/place?key=AIzaSyBYB6IAnJXwc6X8Yr1WR0hMcarcUNgEVQM&q="+quote(business_address)
+            components.iframe(address_map)
+        if business_name:
+            st.subheader(f"Google maps search by business name ({business_name})")
+            business_map = "https://www.google.com/maps/embed/v1/place?key=AIzaSyBYB6IAnJXwc6X8Yr1WR0hMcarcUNgEVQM&q="+quote(business_name)
+            components.iframe(business_map)
+        
+        with st.beta_expander('View Source Data'):
+            st.write((df))
 
 if __name__ == "__main__":
     main()
