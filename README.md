@@ -1,6 +1,9 @@
 # Ice cream
 ESDC Hackathon - Team 11 Ice Cream
 
+# Application Example
+![Example](https://user-images.githubusercontent.com/1518873/111065062-f23ba500-8474-11eb-92ef-710380c5a020.png)
+
 # Usage
 
 Run the following command from the project root folder:
