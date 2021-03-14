@@ -57,20 +57,25 @@ def load_company_page(df):
     col1.markdown(f"Director names: **{director_names}**")
 
     col1.subheader('Search Links')
-    for searchTerm in [business_name, business_address]:
+    for kind, searchTerm in {"name" : business_name, "address" : business_address}.items():
         if searchTerm != "Unknown":
             query = quote(searchTerm)
-            col1.markdown(f"<a href='https://google.com/search?q=\"{query}\"' target='_blank'>Google exact match for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
-            col1.markdown(f"<a href='https://google.com/search?q={query}' target='_blank'>Google partial match for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
-            col1.markdown(f"<a href='https://facebook.com/search/people/?q={query}' target='_blank'>Facebook search for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
+            html = "<a href='{url}{query}' target='_blank'><img src='{logo}' width='30' style='padding:5px'>{text} for <b>{searchTerm}</b></a>"
+            google_logo = "https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-jiKhxDx1FrYbtRHKJ9z_hELisAlapwE9LUPh6fcXIfb5vwpbMl4xl9H9TRFPc5NOO8Sb3VSgIBrfRYvW6cUA"
+            facebook_logo = "https://facebookbrand.com/wp-content/uploads/2019/04/f_logo_RGB-Hex-Blue_512.png?w=30&h=30"
+            linkedin_logo = "https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg"
+            google_exact = html.format(query = f'"{query}"', logo = google_logo, searchTerm = searchTerm, text="Exact match", url ="https://google.com/search?q=")
+            google_partial = html.format(query = query, logo = google_logo, searchTerm = searchTerm, text="Partial match", url = "https://google.com/search?q=")
+            facebook = html.format(query = query, logo = facebook_logo, searchTerm = searchTerm, text="Search", url = "https://facebook.com/search/places/?q=")
+            linkedin = html.format(query = query, logo = linkedin_logo, searchTerm = searchTerm, text="Search", url = "https://linkedin.com/search/results/all/?keywords=")
+            col1.markdown(google_exact,  unsafe_allow_html=True)
+            col1.markdown(google_partial,  unsafe_allow_html=True)
+            col1.markdown(facebook,  unsafe_allow_html=True)
+            if kind == "name":
+                col1.markdown(linkedin,  unsafe_allow_html=True)
 
     col1.subheader('Other Matching Results')
-    #for item in df.iloc[1:]:
-    remaining_cols = df.iloc[1:]
-    if remaining_cols.empty:
-        col1.markdown("No other matches")
-    else:
-        col1.markdown(df.iloc[1:][["BusinessName", "Address"]])
+    col1.write(df.iloc[1:])
     
     def message(blacklist_db, search):
         found_text = "<span style='color:red;'>RED FLAG - probable match found for {search}</span>".format(search=search)
