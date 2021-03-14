@@ -2,33 +2,37 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import streamlit.components.v1 as components
+from requests.utils import quote
 #import canlii
 
 @st.cache
 def get_data(address=None, biz_name=None):
     
     df = pd.read_csv('./data/processed/business-licences-hackathon.csv', sep = ';', low_memory=False)
-    
+    #df = orig_df
     # for testing
     #df = df.iloc[0:1]
     #return df
     
-    if (address) and (biz_name):
+    if address and biz_name:
         #NEED TO CHANGE STREET TO ADDRESS
         #ONlY DISPLAY LATEST FOLDER YEAR
         df = df.query('BusinessName == @biz_name & Street == @address')
-        return df#.set_index("BusinessName")
     elif address:
-        print(address)
         df = df.query('Street == @address')
-        return df#.set_index("Street")
     elif biz_name:
-        #df.query()
-        #print(biz_name)
         df = df.query('BusinessName == @biz_name')
-        return df.reset_index(drop=True)
     else:
         print('Please enter in an address or business name.')
+    
+    if df.empty:
+        df = df.append(pd.Series(), ignore_index = True)
+        if biz_name:
+            df["BusinessName"] = biz_name
+        if address:
+            df["Street"] = address
+    df.fillna("Unknown", inplace=True)   
+    return df.reset_index(drop=True)
 
 def main():
     #try:
@@ -39,11 +43,11 @@ def main():
     if st.sidebar.button('Search'):
         df = get_data(search_address, search_biz_name)
         
-        company = df.iloc[0]
-        business_name = company["BusinessName"]
+        company = df.iloc[0, :]
+        business_name = company["BusinessName"] 
         business_address = company["Street"]
         phone = "Unknown"
-        num_employees = company["NumberofEmployees"]
+        num_employees = str(company["NumberofEmployees"]).replace(".0", "")
         num_years_active = "Unknown"
         director_names = "Unknown"
         
@@ -54,18 +58,17 @@ def main():
         col1.markdown(f"Name: **{business_name}**")
         col1.markdown(f"Address: **{business_address}**")
         col1.markdown(f"Phone: **{phone}**")
-        col1.markdown("Number of employees: **{:.0f}**".format(num_employees))
+        col1.markdown(f"Number of employees: **{num_employees}**")
         col1.markdown(f"Estimated years active: **{num_years_active}**")
         col1.markdown(f"Director names: **{director_names}**")
 
-        col1.subheader('Links')
-        for searchTerm in [business_address, business_address]:
+        col1.subheader('Search Links')
+        for searchTerm in [business_name, business_address]:
             if(searchTerm):
-                from requests.utils import quote
-                searchTerm = quote(searchTerm)
-                col1.markdown("<a href='https://google.com/search?q=\""+searchTerm+"\"' target='_blank'>Google exact match search</a>",  unsafe_allow_html=True)
-                col1.markdown("<a href='https://google.com/search?q=\""+searchTerm+"\"' target='_blank'>Google partial search</a>",  unsafe_allow_html=True)
-                col1.markdown("<a href='https://facebook.com/search/people/?q="+searchTerm+"' target='_blank'>Facebook search</a>",  unsafe_allow_html=True)
+                query = quote(searchTerm)
+                col1.markdown(f"<a href='https://google.com/search?q=\"{query}\"' target='_blank'>Google exact match for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
+                col1.markdown(f"<a href='https://google.com/search?q={query}' target='_blank'>Google partial match for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
+                col1.markdown(f"<a href='https://facebook.com/search/people/?q={query}' target='_blank'>Facebook search for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
 
         col2.subheader('Other Matching Results')
         col2.write(df.iloc[1:])
