@@ -15,7 +15,7 @@ def get_data(address=None, biz_name=None):
     #AWS_BUCKET_URL = "https://streamlit-demo-data.s3-us-west-2.amazonaws.com"
     #df = pd.read_csv(AWS_BUCKET_URL + "/agri.csv.gz")
     #global df
-    df = pd.read_csv('business-licences-hackathon.csv', sep = ';', low_memory=False)
+    df = pd.read_csv('./data/processed/business-licences-hackathon.csv', sep = ';', low_memory=False)
 
 
     if (address) and (biz_name):
@@ -35,7 +35,6 @@ def get_data(address=None, biz_name=None):
     else:
         print('Please enter in an address or business name.')
 
-
 def main():
     #try:
     st.sidebar.text("Enter an address, business name, \n or both!")
@@ -44,48 +43,38 @@ def main():
     print(st.sidebar)
     if st.sidebar.button('Search'):
         df = get_data(address, biz_name)
-        st.write(df)
-        #option = st.sidebar.selectbox(
-        #'These are multiple return values',
-        #('ALL VALUE1', 'ALL VALUE2', 'ALL VALUE3')
-        #st.sidebar.write('You selected:', option)
-    #print(df)
+        
+        col1, col2 = st.beta_columns(2)
+        
+        col1.subheader("Company Information")
+        col1.markdown("Name")
+        col1.markdown("Address")
+        col1.markdown("Phone")
+        col1.markdown("Number of employees")
+        col1.markdown("Estimated years active")
+        col1.markdown("Director names")
 
+        col1.subheader('Other Results')
+        col1.write(df)
+        
+        col1.subheader('Links')
+        col1.write(df)
+        
+        col2.subheader("Streetview")
+        col2.markdown("[ ]")
+        
+        col2.subheader("Related Results")
+        col2.write(df)
+        
+        col2.subheader("Legal Check")
+        col2.markdown("No fraud detected")
+        
+        col2.subheader("Fraud Check")
+        col2.markdown("No fraud detected")
+        
+        with st.beta_expander('View Source Data'):
+            st.write((df))
 
-
-        # countries = st.multiselect(
-        #     "Choose countries", list(df.index), ["China", "United States of America"]
-        #
-        # if not countries:
-        #     st.error("Please select at least one country.")
-        # else:
-        #     data = df.loc[countries]
-        #     data /= 1000000.0
-        #     st.write("### Gross Agricultural Production ($B)", data.sort_index())
-
-        #     data = data.T.reset_index()
-        #     data = pd.melt(data, id_vars=["index"]).rename(
-        #         columns={"index": "year", "value": "Gross Agricultural Product ($B)"}
-        #     )
-        #     chart = (
-        #         alt.Chart(data)
-        #         .mark_area(opacity=0.3)
-        #         .encode(
-        #             x="year:T",
-        #             y=alt.Y("Gross Agricultural Product ($B):Q", stack=None),
-        #             color="Region:N",
-        #         )
-        #     )
-        #     st.altair_chart(chart, use_container_width=True)
-    # except urllib.error.URLError as e:
-    #     st.error(
-    #         """
-    #         **This demo requires internet access.**
-
-    #         Connection error: %s
-    #     """
-    #         % e.reason
-    #     )
 
 if __name__ == "__main__":
     main()
