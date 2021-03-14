@@ -4,7 +4,7 @@ import re
 
 def data_consolidation():
     # Read csv 
-    df = pd.read_csv('../data/raw/business-licences.csv', delimiter = ";")
+    df = pd.read_csv('../data/raw/business-licences-hackathon.csv', delimiter = ";")
     
     # Fill nan with empty string
     df.fillna('', inplace=True)
@@ -25,6 +25,8 @@ def data_consolidation():
     # Sort FOLDERYAR column by descending order
     df = df.sort_values(by='FOLDERYEAR', ascending=False)
     
-    # Outpur processed csv file to processed data folder
-    df.to_csv('../data/processed/business-licences_processed.csv', index = False)
+    # Output processed csv file to processed data folder
+    df.to_csv('../data/processed/business-licences-hackathon.csv', index = False)
 
+if __name__ == "__main__":
+    data_consolidation()
