@@ -1,20 +1,11 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-
-#def one_row(df):
-   #df.filter('year')
-   #return df.loc[0,:]
-
-#Save all names in separate dataframe
-#Filter and save all other variables (i.e. address) as list
-#Also need federal vs. provincial button
+#import canlii
 
 @st.cache
 def get_data(address=None, biz_name=None):
-    #AWS_BUCKET_URL = "https://streamlit-demo-data.s3-us-west-2.amazonaws.com"
-    #df = pd.read_csv(AWS_BUCKET_URL + "/agri.csv.gz")
-    #global df
+    
     df = pd.read_csv('./data/processed/business-licences-hackathon.csv', sep = ';', low_memory=False)
     
     # for testing
@@ -47,9 +38,6 @@ def main():
     if st.sidebar.button('Search'):
         df = get_data(address, biz_name)
         
-        st.header("Company")
-        col1, col2 = st.beta_columns(2)
-        
         company = df.iloc[0]
         business_name = company["BusinessName"]
         address = company["Street"]
@@ -57,6 +45,9 @@ def main():
         num_employees = company["NumberofEmployees"]
         num_years_active = "Unknown"
         director_names = "Unknown"
+        
+        st.header("Results for "+business_name)
+        col1, col2 = st.beta_columns(2)
         
         col1.subheader("Company Information")
         col1.markdown(f"Name: **{business_name}**")
@@ -66,27 +57,37 @@ def main():
         col1.markdown(f"Estimated years active: **{num_years_active}**")
         col1.markdown(f"Director names: **{director_names}**")
 
-        col1.subheader('Other Results')
-        col1.write(df)
-        
         col1.subheader('Links')
-        col1.write(df)
+        for searchTerm in [address, biz_name]:
+            if(searchTerm):
+                from requests.utils import quote
+                searchTerm = quote(searchTerm)
+                col1.markdown("<a href='https://google.com/search?q=\""+searchTerm+"\"' target='_blank'>Google exact match search</a>",  unsafe_allow_html=True)
+                col1.markdown("<a href='https://google.com/search?q=\""+searchTerm+"\"' target='_blank'>Google partial search</a>",  unsafe_allow_html=True)
+                col1.markdown("<a href='https://facebook.com/search/people/?q="+searchTerm+"' target='_blank'>Facebook search</a>",  unsafe_allow_html=True)
         
         col2.subheader("Streetview")
         col2.markdown("[ ]")
+
+        col2.subheader('Other Results')
+        col2.write(df.iloc[1:])
         
-        col2.subheader("Related Results")
-        col2.write(df)
-        
-        col2.subheader("Legal Check")
-        col2.markdown("No fraud detected")
+        col2.subheader("Offshore Leaks Database Check")
+        # offshore_message, offshore_df, canlii_message, canlii_df
+        if(address):
+            pass
+            #col2.write(offshore_leaks_search_address(address))
+        if(biz_name):
+            pass
+            #col2.write(offshore_leaks_search_entity(biz_name))
+            col2.subheader("CanLii Legal Check")
+            #col2.write(canlii_search_entity(biz_name))
         
         col2.subheader("Fraud Check")
         col2.markdown("No fraud detected")
         
         with st.beta_expander('View Source Data'):
             st.write((df))
-
 
 if __name__ == "__main__":
     main()
