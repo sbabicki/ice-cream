@@ -3,7 +3,7 @@ import pandas as pd
 import altair as alt
 import streamlit.components.v1 as components
 from requests.utils import quote
-#import canlii
+import fuzzy_blacklist
 
 @st.cache
 def get_data(address=None, biz_name=None):
@@ -72,19 +72,28 @@ def main():
                 col1.markdown(f"<a href='https://google.com/search?q={query}' target='_blank'>Google partial match for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
                 col1.markdown(f"<a href='https://facebook.com/search/people/?q={query}' target='_blank'>Facebook search for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
 
-        col2.subheader('Other Matching Results')
-        col2.write(df.iloc[1:])
+        col1.subheader('Other Matching Results')
+        col1.write(df.iloc[1:])
+        
+        found_text = "<span style='color:red;'>RED FLAG - probable match found</span>"
+        not_found_text = "<span style='color:green;'>No red flag found</span>"
         
         col2.subheader("Offshore Leaks Database Check")
-        # offshore_message, offshore_df, canlii_message, canlii_df
+        
         if business_address != "Unknown":
-            pass
-            #col2.write(offshore_leaks_search_address(address))
+            blacklist_db = fuzzy_blacklist.offshore_leaks_search_address(business_address)
+            col2.markdown(found_text if any(blacklist_db['scores'] > 80) else not_found_text, unsafe_allow_html=True)
+            col2.write(blacklist_db)
+            
         if business_name != "Unknown":
-            pass
-            #col2.write(offshore_leaks_search_entity(biz_name))
+            blacklist_db = fuzzy_blacklist.offshore_leaks_search_entity(business_name)
+            col2.markdown(found_text if any(blacklist_db['scores'] > 80) else not_found_text, unsafe_allow_html=True)
+            col2.write(blacklist_db)
+            
+            blacklist_db = fuzzy_blacklist.canlii_search_entity(business_name)
             col2.subheader("CanLii Legal Check")
-            #col2.write(canlii_search_entity(biz_name))
+            col2.markdown(found_text if any(blacklist_db['scores'] > 80) else not_found_text, unsafe_allow_html=True)
+            col2.write(blacklist_db)
         
         col2.subheader("Fraud Check")
         col2.markdown("No fraud detected")
