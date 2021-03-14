@@ -12,7 +12,7 @@ def data_consolidation():
     # Concatenate columns to create 'address' column
     df['Unit'] = df['Unit'].astype(str)
     df["House"] = df["House"].astype(str).str.replace(r'.0', '')
-    df['Address'] = df['Unit'] + " " + df['UnitType'] + " " + df['House'] + " " + df['Street'] + " " + df['City'] + " " + df['Province'] + " " + df['Country'] + " " + df['PostalCode']
+    df['Address'] = df['UnitType'] + " " + df['Unit'] + " " + df['House'] + " " + df['Street'] + " " + df['City'] + " " + df['Province'] + " " + df['Country'] + " " + df['PostalCode']
     df['Address'] = df['Address'].str.strip()
     
     # Drop some columns and reorder columns

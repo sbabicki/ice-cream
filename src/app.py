@@ -8,20 +8,22 @@ from requests.utils import quote
 @st.cache
 def get_data(address=None, biz_name=None):
     
-    df = pd.read_csv('./data/processed/business-licences-hackathon.csv', sep = ';', low_memory=False)
+    df = pd.read_csv('./data/processed/business-licences-hackathon.csv', low_memory=False)
     #df = orig_df
     # for testing
     #df = df.iloc[0:1]
     #return df
     
     if address and biz_name:
-        #NEED TO CHANGE STREET TO ADDRESS
-        #ONlY DISPLAY LATEST FOLDER YEAR
-        df = df.query('BusinessName == @biz_name & Street == @address')
+        address = address.lower()
+        biz_name = biz_name.lower()
+        df = df.query('BusinessName.str.lower() == @biz_name & Address.str.lower() == @address')
     elif address:
-        df = df.query('Street == @address')
+        address = address.lower()
+        df = df.query('Address.str.lower() == @address')
     elif biz_name:
-        df = df.query('BusinessName == @biz_name')
+        biz_name = biz_name.lower()
+        df = df.query('BusinessName.str.lower() == @biz_name')
     else:
         print('Please enter in an address or business name.')
     
@@ -45,7 +47,7 @@ def main():
         
         company = df.iloc[0, :]
         business_name = company["BusinessName"] 
-        business_address = company["Street"]
+        business_address = company["Address"]
         phone = "Unknown"
         num_employees = str(company["NumberofEmployees"]).replace(".0", "")
         num_years_active = "Unknown"
@@ -64,7 +66,7 @@ def main():
 
         col1.subheader('Search Links')
         for searchTerm in [business_name, business_address]:
-            if(searchTerm):
+            if searchTerm != "Unknown":
                 query = quote(searchTerm)
                 col1.markdown(f"<a href='https://google.com/search?q=\"{query}\"' target='_blank'>Google exact match for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
                 col1.markdown(f"<a href='https://google.com/search?q={query}' target='_blank'>Google partial match for <b>{searchTerm}</b></a>",  unsafe_allow_html=True)
@@ -75,10 +77,10 @@ def main():
         
         col2.subheader("Offshore Leaks Database Check")
         # offshore_message, offshore_df, canlii_message, canlii_df
-        if business_address:
+        if business_address != "Unknown":
             pass
             #col2.write(offshore_leaks_search_address(address))
-        if business_name:
+        if business_name != "Unknown":
             pass
             #col2.write(offshore_leaks_search_entity(biz_name))
             col2.subheader("CanLii Legal Check")
@@ -87,11 +89,11 @@ def main():
         col2.subheader("Fraud Check")
         col2.markdown("No fraud detected")
         
-        if business_address:
+        if business_address != "Unknown":
             st.subheader(f"Google maps search by address ({business_address})")
             address_map = "https://www.google.com/maps/embed/v1/place?key=AIzaSyBYB6IAnJXwc6X8Yr1WR0hMcarcUNgEVQM&q="+quote(business_address)
             components.iframe(address_map)
-        if business_name:
+        if business_name != "Unknown":
             st.subheader(f"Google maps search by business name ({business_name})")
             business_map = "https://www.google.com/maps/embed/v1/place?key=AIzaSyBYB6IAnJXwc6X8Yr1WR0hMcarcUNgEVQM&q="+quote(business_name)
             components.iframe(business_map)
