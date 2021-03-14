@@ -16,8 +16,11 @@ def get_data(address=None, biz_name=None):
     #df = pd.read_csv(AWS_BUCKET_URL + "/agri.csv.gz")
     #global df
     df = pd.read_csv('./data/processed/business-licences-hackathon.csv', sep = ';', low_memory=False)
-
-
+    
+    # for testing
+    df = df.iloc[0:1]
+    return df
+    
     if (address) and (biz_name):
         #NEED TO CHANGE STREET TO ADDRESS
         #ONlY DISPLAY LATEST FOLDER YEAR
@@ -40,19 +43,28 @@ def main():
     st.sidebar.text("Enter an address, business name, \n or both!")
     address = st.sidebar.text_input("Enter an address")
     biz_name = st.sidebar.text_input("Enter a business name")
-    print(st.sidebar)
+    
     if st.sidebar.button('Search'):
         df = get_data(address, biz_name)
         
+        st.header("Company")
         col1, col2 = st.beta_columns(2)
         
+        company = df.iloc[0]
+        business_name = company["BusinessName"]
+        address = company["Street"]
+        phone = "Unknown"
+        num_employees = company["NumberofEmployees"]
+        num_years_active = "Unknown"
+        director_names = "Unknown"
+        
         col1.subheader("Company Information")
-        col1.markdown("Name")
-        col1.markdown("Address")
-        col1.markdown("Phone")
-        col1.markdown("Number of employees")
-        col1.markdown("Estimated years active")
-        col1.markdown("Director names")
+        col1.markdown(f"Name: **{business_name}**")
+        col1.markdown(f"Address: **{address}**")
+        col1.markdown(f"Phone: **{phone}**")
+        col1.markdown("Number of employees: **{:.0f}**".format(num_employees))
+        col1.markdown(f"Estimated years active: **{num_years_active}**")
+        col1.markdown(f"Director names: **{director_names}**")
 
         col1.subheader('Other Results')
         col1.write(df)
